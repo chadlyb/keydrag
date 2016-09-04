@@ -4,4 +4,3 @@ Simple Minivan Key layout editor in JavaScript
 - I don't have a Minivan, so I can't really test it end-to-end.
 - Uses backend at http://van.mgauck.de
 - Github for backend is https://github.com/liftylol/MiniVanConfigurator
-- 
