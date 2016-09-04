@@ -1,0 +1,492 @@
+<html>
+<head>
+	<title>Van-o-matic</title>
+	<!-- <link rel="stylesheet" href="kdrag.css"> -->
+	<style type="text/css">
+
+		body {
+			background: #88AA99;
+			font-family: Tahoma, Geneva, sans-serif;
+		}
+
+		canvas { border: 1px solid black; }
+
+		.element {
+		    display:inline-block;
+			background:blue;
+			position:absolute;  
+		}
+
+		.key {
+			font-size: 75%;
+			display:table-cell; //-block;
+			text-align: center;
+			vertical-align: middle;
+			// line-height:20px;
+			background:#DDFFDD;
+			// border: 1px solid black;
+			box-shadow:0px 0px 0px 1px black inset;
+			// -webkit-box-shadow: inset 0px 0px 0px 1px rgba(0,0,0,0.3);
+			// -moz-box-shadow: inset 19px 20px 40px 7px rgba(0,0,0,0.3);
+			// box-shadow: inset 19px 20px 40px 7px rgba(0,0,0,0.3);
+		}
+
+		.key:hover {
+			background:#EEFFEE;
+		}
+
+		.slot {
+		    display:table-cell; //inline-block;
+			background:#DDDDFF;
+			// border: 1px solid black;
+			box-shadow:0px 0px 0px 1px black inset;
+			// position:absolute;  
+			// left:100px;
+			// top:150px;
+			// width:64px;
+			// height:64px;
+			vertical-align: middle;
+			text-align: center;
+			// align-content: center;
+		}		
+
+		.buttonish {
+			background:#FFFFBB;
+			border: 1px solid black;
+			padding: 2px;
+			cursor: pointer;
+		}
+
+		.buttonish:hover {
+			background:#FFFFDD;
+		}
+
+		.layer_selector_button {
+			background:#FFFFBB;
+			border: 1px solid black;
+			padding: 2px;
+			cursor: pointer;
+		}
+
+		.layer_selector_button:hover {
+			background:#FFFFDD;
+		}
+
+		.layer_selector_button_active {
+			background:#88FF88;
+			box-shadow:0px 0px 0px 1px black inset;
+		}
+
+		.layer_selector_button_active:hover {
+			background:#88FF88;
+		}
+
+		.slot:hover {
+			background-color: #EEEEFF;
+		}
+
+		.selected {
+			// border: 1px solid red;
+			box-shadow:0px 0px 0px 1px red  inset;
+			background: #FFDDDD;
+		}
+    </style>
+
+	<script src="jquery-1.12.4.js"></script>
+
+	<script>
+		keys = [ [":2.0", "F13","F14","F15","F16", ":0.5", "F17","F18","F19","F20", ":0.5" ,"F21","F22", "F23", "F24", ":4.0", "MPLY", "MSTP", "VOLU" ],
+		         ["ESCAPE", ":1.0", "F1","F2","F3","F4", ":0.5", "F5","F6","F7","F8", ":0.5" ,"F9","F10", "F11", "F12", ":0.5", "PRINT", "SCROLL", "PAUSE", ":0.5", "MPRV", "MNXT", "VOLD"],
+				 [],
+				 ["GRV", "1","2","3","4","5","6","7","8","9","0","MINUS","EQUAL","BSPACE:2.0", ":0.5", "INSERT", "HOME", "PGUP", ":0.5", "NUMLOCK", "KP_SLASH", "KP_ASTERISK", "KP_MINUS"],
+				 ["TAB:1.5", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "LBRACKET","RBRACKET","BSLASH:1.5", ":0.5", "DEL", "HOME", "PGDOWN", ":0.5", "KP_7", "KP_8", "KP_9", "KP_PLUS"],
+				 ["CAPS:1.75", "A", "S", "D", "F", "G", "H", "J", "K", "L", "SCOLON", "QUOTE", "ENTER:2.25", ":4.0", "KP_4", "KP_5", "KP_6", ":1.0"],				 
+				 ["LSHIFT:2.25", "Z", "X", "C", "V", "B", "N", "M", "COMMA", "DOT", "SLASH", "RSHIFT:2.75", ":1.5", "UP", ":1.5", "KP_1", "KP_2", "KP_3", "KP_ENTER"],
+				 ["LCTRL:1.25", "LGUI:1.25", "LALT:1.25", "SPACE:6.25", "RALT:1.25", "RGUI:1.25", ":1.25", "RCTRL:1.25", ":0.5", "LEFT", "DOWN", "RIGHT", ":0.5", "KP_0:2.0", "KP_DOT" ],
+				 [],				 
+				 ["FN0", "FN1", "FN2", "FN3", "FN4", "FN5", "FN6", "FN7", ":0.5", "FN8", "FN9", "FN10", "FN11", "FN12", "FN13", "FN14", "FN15", ":0.5", "NONUS_HASH" ],
+				 ["FN16", "FN17", "FN18", "FN19", "FN20", "FN21", "FN22", "FN23", ":0.5", "FN24", "FN25", "FN26", "FN27", "FN28", "FN29", "FN30", "FN31"] ];
+
+		keycode_text = {
+			"ESCAPE":"ESC",
+			"SCROLL":"SCRL<br>LOCK",
+			"MINUS":"_<br />-",
+			"EQUAL":"+<br />=",
+			"LBRACKET":"{<br />[",
+			"RBRACKET":"}<br />]",
+			"BSLASH":"|<br />\\",
+			"CAPS":"CAPS<br>LOCK",
+			"GRV":"~<br />`",
+			"SCOLON":":<br />;",
+			"QUOTE":"\"<br />'",			
+			"COMMA":"&lt;<br />,",
+			"DOT":"&gt;<br />.", 
+			"SLASH":"?<br />/",
+			"NUMLOCK":"NUM<br />LOCK",
+			"KP_SLASH":"KP<br />/",
+			"KP_ASTERISK":"KP<br />*",
+			"KP_MINUS":"KP<br />-",
+			"KP_PLUS":"KP<br />+", 
+			"KP_ENTER":"KP<br />ENTER", 
+			"KP_DOT":"KP<br />.", 
+			"KP_EQUAL":"KP<br />=",
+			"KP_0":"KP<br />0",
+			"KP_1":"KP<br />1", 
+			"KP_2":"KP<br />2", 
+			"KP_3":"KP<br />3", 
+			"KP_4":"KP<br />4", 
+			"KP_5":"KP<br />5", 
+			"KP_6":"KP<br />6", 
+			"KP_7":"KP<br />7", 
+			"KP_8":"KP<br />8", 
+			"KP_9":"KP<br />9",
+			"NONUS_HASH":"~<br />#",
+			"PGDOWN":"PGDN",
+			"MPLY":"M<br />PLAY",
+			"MSTP":"M<br />STOP",
+			"MPRV":"M<br />PREV",
+			"MNXT":"M<br />NEXT",
+			"VOLD":"VOL<br />DOWN",
+			"VOLU":"VOL<br />UP",
+			"INSERT":"INS",
+		};
+
+		layerCount = 5;
+		board = [ [1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.75 ], 
+		          [1.25, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.50 ],
+		          [1.75, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00 ],
+		          [1.25, 1.50, 1.25, 2.25, 2.00, 1.25, 1.50, 1.75 ] ];
+			
+		slot_base_size = 48;
+		key_base_size  = 40;
+
+	    function allowDrop(ev) {
+		    ev.preventDefault();
+		}
+
+		function keyBuilder( keycode, size, isPalette ) {
+
+			var keytext = keycode;
+			if ( keycode_text[keycode] )
+				keytext = keycode_text[keycode];
+
+			key = $("<div />")
+			key.attr({id: "key_" + keycode, class: 'key', draggable: "true" });
+			key.css( { width: key_base_size * size + "px", height: key_base_size + "px" } );
+
+			key.on('dragstart', function(ev){				        
+				var keycode = $( this ).data( 'keycode' );
+				var data;
+				if ( isPalette )
+				{
+					data = [ "from_palette", keycode ];
+				}
+				else
+				{
+				    data = [ "from_key", keycode, $( this ).parent().data( 'slot_id' ) ];
+				}
+				ev.originalEvent.dataTransfer.setData("text/plain", JSON.stringify( data ) ); //"keycode " + ev.target.id);
+			});
+
+			key.html( keytext )
+			key.data( 'keycode', keycode )
+			return key;				
+		}
+
+		function fixTransparent(slot)
+		{
+			var base_item = $( "#slot_" + 0 + "_" + slot[1] + "_" + slot[2] )
+			base_keycode = base_item.data('bound');
+			var keytext = base_keycode;
+			if ( keycode_text[base_keycode] )
+				keytext = keycode_text[base_keycode];			
+    		for ( layerIter = 1; layerIter != layerCount; layerIter++ )
+    		{
+				var item = $( "#slot_" + layerIter + "_" + slot[1] + "_" + slot[2] )
+				if (item.data('bound') == '')	    				
+					item.html("<i>" + keytext + "</i>" );
+    		}
+		}
+
+		function findSlot( slotIndex )
+		{
+			return $( "#slot_" + slotIndex[0] + "_" + slotIndex[1] + "_" + slotIndex[2] )
+		}
+
+		function parseCommand( data ) {
+		    if ( data[1] == "delete" )
+		    {
+		    	// Nuke source		    	
+		    	var source_slot = data[3];
+		    	var source = findSlot( source_slot ); 
+	    		source.html('');
+	    		source.data('bound', '');
+			    fixTransparent( source_slot );
+			    return;
+		    }
+
+			var target_slot = data[0];
+			var target = findSlot( target_slot ); 
+			var target_size = target.data('slot_size');
+		    var keyCode = data[2];
+
+		    if ( data[1] == "from_palette" )
+		    {
+		    	// If something in here already, nuke it
+		    	target.html('');
+		    	target.append( keyBuilder( keyCode, target_size, false ) );
+		    	target.data( 'bound', keyCode );
+		    }
+		    else
+		    {
+		    	// If something in here already, swap with source
+		    	var source_slot = data[3];
+		    	var source = findSlot( source_slot ); 
+
+		    	if ( target_slot != source_slot )
+		    	{
+			    	var target_keycode = target.data( 'bound' );
+		    		target.html('');
+		    		source.html('');
+		    		source.data('bound', '');
+			    	if ( target_keycode != '' )
+			    	{		    		
+			    		source.append( keyBuilder( target_keycode, source.data('slot_size'), false ) );
+			    		source.data( 'bound', target_keycode );
+			    	}
+
+			    	target.append( keyBuilder( keyCode, target_size, false ) );
+			    	target.data( 'bound', keyCode );
+			    }
+
+			    fixTransparent( source_slot );
+		    }
+
+		    fixTransparent( target_slot );
+		}
+
+		function drop(ev) {
+		    ev.preventDefault();
+		    var target = $( ev.target );
+
+			// need real slot.
+		    while ( !target.data('slot_id' ) )
+		    	target = target.parent();
+		    
+		    var target_slot = target.data('slot_id');
+		    var data = JSON.parse(ev.dataTransfer.getData("text"));
+
+		    data = [target_slot].concat( data )
+
+		    parseCommand( data );
+		    ev.stopPropagation();
+		}
+
+		function set_selected_to_keycode( keyCode )
+		{
+			parseCommand( [ selected.data('slot_id'), 'from_palette', keyCode ] );
+		}
+
+		function change_selected( newSelected )
+		{
+			selected.removeClass( 'selected' );
+			selected = newSelected;
+			selected.addClass( 'selected' );
+		}
+
+		function move_to_layer( layer )
+		{
+			var selectedSlotId = selected.data( 'slot_id' ).slice(); 
+			selectedSlotId[0] = layer;
+			change_selected( findSlot( selectedSlotId ) );
+
+			for (layerIter = 0; layerIter < layerCount; ++layerIter )
+			{
+				$( "#layer_" + layerIter ).css( { display: ( layerIter == layer ) ? "block" : "none" });
+				if ( layerIter == layer )
+					$( "#layer_selector_button_" + layerIter ).addClass( 'layer_selector_button_active' )
+				else
+					$( "#layer_selector_button_" + layerIter ).removeClass( 'layer_selector_button_active' )
+			}
+		}
+
+		function body_load()
+		{
+			for (keyRowIter = 0; keyRowIter < keys.length; ++keyRowIter  )
+			{
+				rowDiv = $("<div />");
+				for (keyIter = 0; keyIter < keys[keyRowIter].length; ++keyIter )
+				{
+					var keycodeSplit = keys[keyRowIter][keyIter].split(":")
+					var keycode = keycodeSplit[0];
+					var size = keycodeSplit[1];
+					if ( !size )
+						size = 1.0;					
+
+					if ( keycode == ""  )
+					{
+						var div = $("<div />")
+						div.css( { width: key_base_size * size + "px", height: key_base_size + "px" } )
+						div.css( 'display', 'table-cell' )
+						rowDiv.append( div );
+						continue;
+					}
+					item = keyBuilder( keycode, size, true );
+
+					item.on('click', function(){
+						if( typeof selected !== 'undefined' )
+							set_selected_to_keycode( $( this ).data( 'keycode' ) );
+					});
+					rowDiv.append( item )
+				}
+				if ( keys[keyRowIter].length == 0 )
+					rowDiv.css( 'height', '16px' );
+				$("#palette").append( rowDiv )
+			}
+
+			for (layerIter = 0; layerIter < layerCount; ++layerIter )
+			{
+				layer = $("<div />")
+				layer.attr({id: "layer_" + layerIter })
+
+				layer_selector_button = $("<span />")
+				layer_selector_button.attr( 'id', 'layer_selector_button_' + layerIter)
+				if ( layerIter == 0 )
+					layer_selector_button.html("Base Layer");
+				else
+					layer_selector_button.html("Layer" + layerIter );
+				layer_selector_button.addClass( 'layer_selector_button')
+				layer_selector_button.data( 'layer', layerIter )
+				layer_selector_button.on('click', function(){
+					move_to_layer( $(this).data('layer') );
+				});
+				$("#layer_selector_bar").append( layer_selector_button );
+
+				for (rowIter = 0; rowIter < board.length; rowIter++) {
+					rowDiv = $("<div />")
+					for (colIter = 0; colIter < board[rowIter].length; colIter++) {
+			 	        div = $("<div />")
+				        div.attr({
+				        	id: "slot_" + layerIter + "_" + rowIter + "_" + colIter,
+				        	class: 'slot', 
+				        	draggable: "false", 
+				        	ondrop: "drop(event)", 
+				        	ondragover:"allowDrop(event)"});
+
+				        div.css( { width: board[rowIter][colIter] * slot_base_size + "px", height: slot_base_size + "px" } );
+				        div.on('click', function(){				        	
+							if( typeof selected !== 'undefined' ) { selected.removeClass( 'selected' ); }
+				        	selected = $(this);
+				        	$(this).addClass( 'selected' );
+				        });
+
+				        div.data( 'slot_id', [layerIter, rowIter, colIter ] );
+				        div.data( 'slot_size', board[rowIter][colIter] );
+				        div.data( 'bound', '' );
+
+			            if ( layerIter == 0 && rowIter == 0 && colIter == 0 )
+			            {
+			            	selected = div;
+			            	div.addClass( 'selected' );
+			            }
+
+			            rowDiv.append( div );
+			        }			        
+			        layer.append( rowDiv );
+			    }
+			    
+			    $("#board").append(layer)
+
+			    $("body").on( 'dragover', function( ev ){
+			    	ev.preventDefault();
+			    });
+
+			    $("body").on( 'drop', function( ev ){
+			    	var data = JSON.parse(ev.originalEvent.dataTransfer.getData("text"));
+			    	if ( data[0] == 'from_key' )
+    			    	parseCommand( [0, "delete", 0, data[2]] )
+			    });
+			    
+			    $("#make_hex").on( 'click', function( ev ){
+			    	//form_div = $("#tmpform");
+			    	//form_div.html('');
+			    	form = $("<form />");
+			    	form.attr( { action: "http://van.mgauck.de", method: "post", enctype: "multipart/form-data" } );
+			    	//form_div.append( form )
+
+					for (layerIter = 0; layerIter < layerCount; ++layerIter )
+					{
+						for (rowIter = 0; rowIter < board.length; rowIter++) 
+						{
+							for (colIter = 0; colIter < board[rowIter].length; colIter++) 
+							{
+								n = $("<input />");
+								boundkey = findSlot([layerIter, rowIter, colIter]).data('bound');
+								if ( boundkey == "" && layerIter != 0 )
+									boundkey = "TRNS";
+								n.attr( {type:"text", value: boundkey, name: "L" + layerIter } )
+								form.append( n );
+							}
+						}
+					}
+
+					form.submit();
+			    });
+			}
+
+			$("html").on( 'keydown', function( ev ){
+				var xform = {
+					33: [-1,  0,  0], // PGUP
+					34: [ 1,  0,  0], // PGDN
+					37: [ 0,  0, -1], // LEFT
+					38: [ 0, -1,  0], // UP
+					39: [ 0,  0,  1], // RIGHT
+					40: [ 0,  1,  0]  // DOWN
+				};
+				var x = xform[ev.keyCode];
+				if ( x )
+				{
+					var selectedSlotId = selected.data( 'slot_id' ).slice();
+					
+					selectedSlotId[0] += x[0];
+					if ( selectedSlotId[0] < 0 )
+						selectedSlotId[0] = 0;
+					if ( selectedSlotId[0] >= layerCount )
+						selectedSlotId[0] = layerCount - 1;
+
+					selectedSlotId[1] += x[1];
+					if ( selectedSlotId[1] < 0 )
+						selectedSlotId[1] = 0;
+					if ( selectedSlotId[1] >= board.length )
+						selectedSlotId[1] = board.length - 1;					
+
+					selectedSlotId[2] += x[2];
+					if ( selectedSlotId[2] < 0 )
+						selectedSlotId[2] = 0;
+					if ( selectedSlotId[2] >= board[selectedSlotId[1]].length )
+						selectedSlotId[2] = board[selectedSlotId[1]].length - 1;
+
+					change_selected( findSlot( selectedSlotId ) );
+					move_to_layer( selectedSlotId[0] )
+					ev.preventDefault();
+					return;
+				}
+			})
+
+			move_to_layer( 0 );
+		}
+	</script>
+</head>
+
+<body onload="body_load();">
+<p>Drag key bindings, or click below and then click above. Use up/down/left/right to navigate, pgup and pgdn between layers.</p>
+<div id="palette"></div>
+<br/>
+<div id="layer_selector_bar"></div>
+<div id="board"></div>
+<br/>
+<div id="make_hex"><h3 class="buttonish">Make .hex!</h3></div>
+<!-- <div id="tmpform"></div> -->
+</body>
+
+</html>
